@@ -55,7 +55,7 @@
 				~cs = if ( ~ifC ; "«" & char(41162) & "»" ; _compareText );
 				~lcs = length ( ~cs );
 				~vl = if ( ~ifC ; substitute ( _valueList ; _compareText ; ~cs ) ; _valueList );
-				~end = valueCount ( _valueList );
+				~end = valueCount ( ~vl );
 				~i = 1 ;
 				~result = ""
 			];
