@@ -78,7 +78,7 @@
 							~ifM and ~v = ~cs ; "" ;
 							~ifM and ~v <> ~cs ; ~v ;
 							~ifT and right ( ~v ; ~lcs ) = ~cs ; "" ;
-							~ifL and left ( ~v ; ~lcs ) = ~cs ;  ;
+							~ifL and left ( ~v ; ~lcs ) = ~cs ; "" ;
 							not ( ~ifL or ~ifT ) and patternCount ( ~v ; ~cs ) > 0 ; "" ; 
 							~v 
 						)
