@@ -1,0 +1,46 @@
+/*
+  purpose:
+    進行不區分大小寫的置換
+  format:
+    cf_SubstituteNotCase ( _text ; _beRepStr ; _toRepStr )
+  parameters:
+    _text: 被處理的字串
+    _beRepStr: 被取代的字串
+    _toRepStr: 進行取代的字串
+  dependencies:
+  returns:
+  recursive:
+    yes
+  notes:
+    一次只能置換一個字串
+  current version: v2
+  by jeff liao
+  initial: 20220222
+  history:
+    v2 中文說明, 簡化 function 內容
+*/
+
+Let(
+  [
+    /*
+    _text = "abcde fghij klmno pqrst uvwxy z" ;
+    _beRepStr = "ab" ;
+    _toRepStr = "XX" ;
+    */
+    /* 取得參數 */
+    ~tx = _text ;
+    ~beRep = _beRepStr ;
+    ~toRep = _toRepStr ;
+    /* 取得要被置換字串的位置 */
+    ~len = Length ( ~beRep ) ;
+    ~start = Position ( ~tx; ~beRep ; 1 ; 1 ) ;
+    ~end = If ( ~start > 0 ; ~start + ~len - 1 ; 0 ) ;
+    ~left = If ( ~start > 0 ; Left ( ~tx ; ~start - 1 ) ; ~tx ) ;
+    ~right = If ( ~start > 0 ; Right ( ~tx ; Length ( ~tx ) - ~end ); "" ) ;
+    /* 置換字串 */
+    ~result = ~left 
+      & If ( ~start > 0 ; ~toRep ; "" )
+      & If ( not IsEmpty ( ~right ) ; cf_SubstituteNotCase ( ~right ; ~beRep ; ~toRep ); "" )
+  ] ;
+    ~result
+)
