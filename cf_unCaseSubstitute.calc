@@ -1,0 +1,70 @@
+/*
+  purpose:
+    進行多個不區分大小寫的置換
+  format:
+    cf_unCaseSubstitute ( _text ; _repStrArray )
+  parameters:
+    _text: 要進行置換的文字
+    _repStrArray: 要進行置換字串和要被置換的 jsonArray, 格式如下
+      [
+        [_beRepStr_0,_toRepStr_0],
+        [_beRepStr_1,_toRepStr_1],
+        ...
+      ]
+  dependencies:
+    cf_SubstituteNotCase ( _text ; _beRepStr ; _toRepStr )
+  returns:
+    text
+  recursive:
+    while
+    cf_SubstituteNotCase: recursive
+  notes:
+    _repStrArray: 以 json array 作為參數輸入, 由 json function 處理特殊字元
+  current version: v1
+  by jeff liao
+  initial: 20220312
+  history: v1
+    
+*/
+/* sample input
+  _text = "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Non sit perspiciatis aperiam alias distinctio quas tenetur tempore voluptatem repellat numquam!";
+  _repStrArray = jsonSetElement ( "[]";
+    ["[0][0]" ; "T " ; 1 ];
+    ["[0][1]" ; "t" ; 1 ];
+    ["[1][0]" ; "d" ; 1 ];
+    ["[1][1]" ; "-D-" ; 1 ];
+    ["[2][0]" ; "C" ; 1 ];
+    ["[2][1]" ; "-C-" ; 1 ]
+  )
+*/
+case (
+  IsEmpty ( _text ); "" ;
+  // 非 array
+  left ( _repStrArray ; 1 ) <> "["  ; _text ;
+  // 不是合法的 json
+  left ( JSONFormatElements ( _repStrArray ) ;1 ) = "?" ; _text ;
+  // array 只有一階, 如 [ _beRepStr , _toRepStr ]
+  JSONGetElement ( _repStrArray ; "[0][0]") = "" ;
+    let (
+      [
+        ~beRepStr = JSONGetElement ( _repStrArray ; "[0]") ;
+        ~toRepStr = JSONGetElement ( _repStrArray ; "[1]") 
+      ];
+      cf_SubstituteNotCase ( _text ; ~beRepStr ; ~toRepStr )
+    );
+  while (
+    [
+      ~end = valueCount( jsonListKeys ( _repStrArray ; ".")) - 1 ;
+      ~i = 0 ;
+      ~text = _text
+    ];
+    ~i <= ~end ;
+    [
+      ~beRepStr = jsonGetElement ( _repStrArray ; "[" & ~i & "][0]");
+      ~toRepStr = jsonGetElement ( _repStrArray ; "[" & ~i & "][1]");
+      ~text = cf_SubstituteNotCase ( ~text ; ~beRepStr ; ~toRepStr );
+      ~i = ~i + 1
+    ];
+    ~text
+  )
+)
