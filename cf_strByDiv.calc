@@ -1,0 +1,59 @@
+/*
+  purpose:
+    取處以 _div 作分隔的第 nth 個字串
+  format:
+    cf_strByDiv ( _text; _div; _ifCaseSensitive; _nth )
+  parameters:
+    _text: 用來取值的文字
+    _div: 分隔字元或字串
+    _ifCaseSensitive: _div 是否區分大小寫
+    _nth: 第幾個
+  dependencies:
+    no
+  returns:
+    文字 或者 ""
+  recursive:
+    no
+  notes:
+    從 cf_valueByDelimeter 修訂而來
+  version current: v1
+  by jeff liao
+  initial:
+    20220212
+  history:
+    
+*/
+
+case (
+  _text = "" ; "" ;
+  _div = "" ; "" ;
+  filter ( _nth ; "0123456789") = _nth and not _nth > 0 ; "" ;
+  let (
+    [
+      ~cS = "«" & char(41166) & "»" ;
+      ~ifC = if ( _ifCaseSensitive = true ; 1 ; 0 );
+      ~tx = if ( ~ifC ; substitute ( _text ; _div ; ~cS ); _text );
+      ~div = if ( ~ifC ; ~cs ; _div );
+      ~ld = length ( ~div );
+      ~ifL = if ( left ( ~tx ; ~ld ) = ~div ; 1 ; 0 );
+      ~ifR = if ( right ( ~tx ; ~ld ) = ~div ; 1 ; 0 );
+      ~max = patternCount ( ~tx ; ~div ) + 1 ;
+      ~max = if ( ~ifL ; ~max - 1 ; ~max );
+      ~max = if ( ~ifR ; ~max - 1 ; ~max )
+    ];
+    case ( 
+      patternCount ( ~tx ; ~div ) = 0 ; "" ; 
+      _nth > ~max ; "" ;
+      let ( 
+        [
+          ~tx = if ( ~ifL ; ~tx ; ~div & ~tx );
+          ~tx = if ( ~ifR ; ~tx ; ~tx & ~div );
+          ~sP = position ( ~tx ; ~div ; 1 ; _nth ) + ~ld ;
+          ~eP = position ( ~tx ; ~div ; ~sP ; 1 );
+          ~len = ~eP - ~sP
+        ];
+        middle ( ~tx ; ~sP ; ~len )
+      )
+    )
+  )
+)

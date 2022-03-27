@@ -1,0 +1,65 @@
+/*
+	purpose:
+		convert hex value text to decimal number
+	format:
+		cf_decFromHex ( _hex )
+	parameters:
+		_hex:
+	dependencies:
+		
+	returns:
+		decimal number
+	recursive:
+		while
+	notes:
+		
+	current version: v1
+	by jeff liao
+	initial: 20220212
+	history:
+		
+*/
+
+
+Let (  
+	[ 	
+		/*
+		_hex= "AACC63";
+		*/
+		~baseJ = "{\"0\":0,\"1\":1,\"2\":2,\"3\":3,\"4\":4,\"5\":5,\"6\":6,\"7\":7,\"8\":8,\"9\":9,\"A\":10,\"B\":11,\"C\":12,\"D\":13,\"E\":14,\"F\":15}" ; 
+		~base = ValueCount ( JSONListKeys ( ~baseJ ; "."));
+		~baseTx = jsonListKeys ( ~baseJ ; "." ); 
+		~hex = Upper ( _hex );
+		~result = 
+			If ( 
+			Filter( ~hex; ~baseTx ) <> ~hex ;
+			""; 
+			While(
+				[
+					~end = Length ( ~hex ) ;
+					~calc = 0;
+					~i = 0
+				];
+				~i < ~end ;
+				[
+					~char = Middle ( ~hex ; ~end - ~i ; 1 ); //從右邊開始捉字
+					~dig = JSONGetElement ( ~baseJ ; ~char );
+					~calc = ~calc + ~dig * ~base ^ ~i ;
+					~i = ~i + 1
+				];
+				~calc
+			)
+		)
+	];
+	~result
+)
+
+/*
+Let( [
+	~p = Position( "0123456789ABCDEF"; Right( _hex; 1 ); 1; 1 )
+] ;
+	If ( ~p > 0;
+		~p - 1 + 16 * cf_decFromHex ( Left( _hex; Length( _hex ) - 1 ) )
+	)
+)
+*/

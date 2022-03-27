@@ -1,0 +1,82 @@
+/*
+    purpose:
+        從 html 的色彩名稱或 hex 或者 rgb 數值組轉成表示色彩的十位數數字
+    format:
+        cf_color ( _colorText )
+    parameters:
+        _colorText:
+            允許多種輸入方式 html "color name", "#hhhhhh", "#hhh", "r,g,b", "r;g;b"
+    dependencies:
+        co_colorJ
+        cf_strByDiv ( _text; _div; _ifCaseSensitive; _nth )
+        cf_decFromHex ( hexValue )
+    returns:
+        表示顏色的數字
+    recursive:
+        no
+    notes:
+        
+    version current: 
+        v1
+    by jeff liao
+    initial:
+        20220212
+    history:
+        
+*/
+
+
+Let (
+  [
+    ~cJ = JSONListKeys ( co_colorJ ; "." );
+    ~fH = "0123456789ABCDEFabcdef" ;
+    ~fD1 = ",0123456789" ;
+    ~fD2 = ";0123456789" ;
+    ~chk = 
+      Case (
+        /* hex value, in 6 hexa digit */
+        Left ( _colorText ; 1 ) = "#" and "#" & Filter ( Right ( _colorText ; 6 ); ~fH ) = _colorText and Length ( _colorText ) = 7 ; "h7" ;
+        /* hex value, in 3 hexa digit */
+        Left ( _colorText ; 1 ) = "#" and "#" & Filter ( Right ( _colorText ; 3 ); ~fH ) = _colorText and Length ( _colorText ) = 4 ; "h4" ;
+        /* rgb in r,g,b format */
+        PatternCount ( _colorText ; "," ) = 2 and Filter ( _colorText ; ~fD1 ) = _colorText ; "dD" ;
+        /* rgb in r;g;b format */
+        PatternCount ( _colorText ; ";" ) = 2 and Filter ( _colorText ; ~fD2 ) = _colorText ; "dS" ;
+        /* with html color name */
+        FilterValues ( ~cJ ; _colorText ) <> "" ; "c" ;
+        /* all other situation is error */
+        "err"
+      )
+  ];
+  case ( 
+    /* error 則顏色值為 0, 黑色*/
+    ~chk = "err" ; 0 ;
+    ~chk = "c" ; JSONGetElement ( co_colorJ ; _colorText & ".d") ;
+    Let ( 
+        [
+            ~r = 
+                Case ( 
+                    ~chk = "h7" ; cf_decFromHex ( Middle ( _colorText ; 2 ; 2 )) ;
+                    ~chk = "h4" ; cf_decFromHex ( Middle ( _colorText ; 2 ; 1 ) & Middle ( _colorText ; 2 ; 1 ));
+                    ~chk = "dD" ; mod ( cf_strByDiv ( _colorText; ","; 0; 1 ); 256 );
+                    ~chk = "dS" ; mod ( cf_strByDiv ( _colorText; ";"; 0; 1 ); 256 );
+                );
+            ~g =
+                Case ( 
+                    ~chk = "h7" ; cf_decFromHex ( Middle ( _colorText ; 4 ; 2 )) ;
+                    ~chk = "h4" ; cf_decFromHex ( Middle ( _colorText ; 3 ; 1 ) & Middle ( _colorText ; 3 ; 1 ));
+                    ~chk = "dD" ; mod ( cf_strByDiv ( _colorText; ","; 0; 2 ); 256 );
+                    ~chk = "dS" ; mod ( cf_strByDiv ( _colorText; ";"; 0; 2 ); 256 )
+                );
+            ~b = 
+                Case ( 
+                    ~chk = "h7" ; cf_decFromHex ( Middle ( _colorText ; 6 ; 2 )) ;
+                    ~chk = "h4" ; cf_decFromHex ( Middle ( _colorText ; 4 ; 1 ) & Middle ( _colorText ; 4 ; 1 ));
+                    ~chk = "dD" ; mod ( cf_strByDiv ( _colorText; ","; 0; 3 ); 256 );
+                    ~chk = "dS" ; mod ( cf_strByDiv ( _colorText; ";"; 0; 3 ); 256 )
+                )
+        ];
+        ~r * 256 ^ 2 + ~g * 256 + ~b
+    )
+  )
+)
