@@ -1,0 +1,84 @@
+/*
+  purpose:
+    產生或者刪除指定名稱, 指定值的變數
+  format:
+    cf_maniVar ( _name ; _valueList ; _isGlobal ; _ifDel ; _repQty )
+  parameters:
+    _name: 
+      變數名稱
+    _valueList: 
+      要用來賦值的值清單, 其數量和 _repQty 比較; 較小的數值就是產生變數的 repeat 數
+    _isGlobal: 
+      是否產生 global variable, boolean, 如果不是 false, 則視為建立 global variable
+    _ifDel: 
+      是否要清除變數, 如果是 true 則作清除, 否則則是為建立變數
+    _repQty: 
+      要新建或刪除的變數的 repeat 數; 取 repeat 時, 從 1 開始
+      如果輸入 "" 則是以 _valueList 為準
+  dependencies:
+  returns:
+    產生 repeat 的變數; 變數的值是文字
+  recursive:
+    while
+  notes:
+    _name 必須符合變數命名的規定
+  current version: v2
+  by jeff liao
+  initial:
+  history:
+    v2 20220330
+*/
+
+Let (
+  [
+    /*sample input; begin
+    _name = "var";
+    _valueList = List ( 1 ; "b" ; 3 ; "c" ; 5 ; "d" );
+    _isGlobal = True;
+    _ifDel = false ;
+    _repQty = 3 ;
+    sample input; end*/
+    _valueQty = ValueCount ( _valueList );
+    _repQty = 
+      Case ( 
+        _repQty = "" ; _valueQty ;
+        Int ( Abs ( GetAsNumber ( _repQty ))) = _repQty ; _repQty ; 
+        _valueQty 
+      );
+    _end = Min ( _repQty ; _valueQty );
+    _ifDel = If ( _ifDel = true ; 1 ; 0 );
+    _isG = If ( _isGlobal = False ; 0 ; 1 )
+  ];
+  Case ( 
+    _name = "" ; "" ;
+    not _ifDel and _valueQty = 0 ; "" ; // wrong input
+    _end = 0 ; "" ; // wrong input
+    While (
+      [
+        _i = 1
+      ];
+      _i <= _end ;
+      [
+        _value = If ( _ifDel ; "" ; GetValue (_valueList ; _i )); 
+        _varType = If ( _isG = True ; "$$" ; "$" );
+        _formula = "Let (" & _varType & _name & "[" & _i & "]=" & Quote ( _value ) & "; 1 )";
+        _eval = Evaluate ( _formula );
+        // BE_DialogDisplay ( title ; message ; defaultButton {; cancelButton ; alternateButton } )
+        /*
+        _debug = BE_DialogDisplay ( 
+          "function variables" ; 
+          "_isGlobal: " & _isG & ¶ &
+          "_ifDel: " & _ifDel & ¶ &
+          "_end: " & _end & ¶ &
+          "_formula: " & _formula & ¶ &
+          "_value " & _value
+          ; 
+          "繼續" 
+        );
+        */
+        _i = _i + 1
+      ];
+      _end & " " & if ( _isG ; "global variable " ; "local variable " ) & " had been " & if ( _ifDel ; " deleted." ; "created." )
+    )
+  )
+)
