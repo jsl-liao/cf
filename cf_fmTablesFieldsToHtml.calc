@@ -1,0 +1,123 @@
+/*
+  purpose:
+    取得目前檔案的 to, field names, 產生 html 檔案
+  format:
+    cf_fmTablesFieldsToHtml
+  parameters:
+    none
+  dependencies:
+  returns:
+    html
+  recursive:
+  notes:
+    如果要用在 web viewer, 需要在前面加上 data:text/html,
+  current version: v1
+  by jeff liao
+  initial: 20220501
+  history:
+    
+*/
+
+let (
+  [
+    ~frame = "
+      <!DOCTYPE html>
+      <html lang='en'>
+        <head>
+          <meta charset='UTF-8'>
+          <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+          <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+          <meta platform='FileMaker'>
+          <meta html frame version='v1'>
+          <meta version='v1'>
+          <title>tables and fileds</title>
+          <style>
+            :root{
+              margin:0;
+              padding:0;
+              background: #555;
+              color:#ccc;
+              font-size:16px;
+            }
+            .tables{
+              width:40%;
+              min-width: 300px;
+            }
+            span{
+              display: inline-block;
+              padding: 0 6px;
+            }
+            .tables:nth-child(even){
+              background: #765e;
+            }
+            .tables:nth-child(odd){
+              background: #567e;
+            }
+            .item{
+              margin: 1px;
+              padding: 2px 4px;
+            }
+            .item:nth-child(even){
+              background: #0006;
+            }
+            .item:nth-child(odd){
+              background: #000a;
+            }
+            .fieldName{
+              cursor:pointer;
+              font-size: 1.2rem;
+              color:white;
+            }
+            .fieldReps{
+              color:#aaa;
+              font-size: 0.8rem;
+            }
+          </style>
+        </head>
+        <body>
+          <!--place tables and fields information here-->
+        </body>
+      </html>
+    ";
+    ~title = "<h2 class='title'>" & get(fileName) & "</h2>";
+    // trailing char: O open tag, C close tag
+    ~detailsO = "<details class=\"tables\">" ;
+    ~detailsC = "</details>" ;
+    ~summaryO = "<summary class=\"tableName\">" ;
+    ~summaryC = "</summary>" ;
+    // may change to ul 
+    ~listO = "<ol class=\"items\">" ;
+    ~listC = "</ol>" ;
+    ~rSep = ¶; // row separator
+    ~cSep = char ( 42144 ); // column separator
+    ~tSep = " , id: " ; 
+    ~tableNames = ExecuteSQL ( "SELECT tableName, tableId FROM filemaker_tables ORDER BY Lower(tableName)" ; ~tSep ; "" ) ;
+    ~content = 
+      while (
+        [
+          ~end = valueCount ( ~tableNames );
+          ~i = 1 ;
+          ~calc = ""
+        ];
+        ~i <= ~end ;
+        [
+          ~table = getValue ( ~tableNames ; ~i );
+          ~tableName = left ( ~table ; position ( ~table ; ~tSep ; 1 ; 1 ) - 1 );
+          // ~sentence = "SELECT fieldName, fieldType, fieldClass, fieldReps, fieldId FROM FileMaker_Fields WHERE tableName = ?" ;
+          ~sentence = 
+            "SELECT '<li class=\"item\">
+            <span class=\"fieldName\">' || fieldName, 
+            '</span><span class=\"fieldType\">' || fieldType, 
+            '</span><span class=\"fieldClass\">' || fieldClass, 
+            '</span><span class=\"fieldId\">' || fieldId, 
+            '</span><span class=\"fieldReps\">' || fieldReps || 
+            '</span></li>' FROM FileMaker_Fields WHERE tableName = ? ORDER BY LOWER(fieldName)" ;
+          ~fields = executeSql ( ~sentence ; ~cSep ; ~rSep ; ~tableName );
+          ~calc = ~calc & ~detailsO & ~summaryO & ~table & ~summaryC & ~listO & ~fields & ~listC & ~detailsC ;
+          ~i = ~i + 1
+        ];
+        substitute ( ~calc ; ~cSep ; "" )
+      )
+  ];
+  ~title & substitute ( ~frame ; "<!--place tables and fields information here-->" ; ~content )
+)
